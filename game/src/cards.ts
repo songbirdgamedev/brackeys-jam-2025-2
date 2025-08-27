@@ -1,18 +1,18 @@
 const suits: Array<string> = ["hearts", "diamonds", "clubs", "spades"];
-const values: Array<number> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+const values: Array<number> = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
-type Card = {
-  suit: string;
+export type Card = {
+  suit: number;
   value: number;
 };
 
-function generateDeck(): Array<Card> {
+export function generateDeck(): Array<Card> {
   let deck = [];
 
   for (let i = 0; i < suits.length; i++) {
     for (let j = 0; j < values.length; j++) {
       deck.push({
-        suit: suits[i],
+        suit: i,
         value: values[j],
       });
     }
@@ -21,7 +21,7 @@ function generateDeck(): Array<Card> {
   return deck;
 }
 
-function shuffleDeck(deck: Array<Card>): void {
+export function shuffleDeck(deck: Array<Card>): void {
   // swap cards 1000 times
   for (let i = 0; i < 1000; i++) {
     const index1 = Math.floor(Math.random() * deck.length);
@@ -30,6 +30,6 @@ function shuffleDeck(deck: Array<Card>): void {
   }
 }
 
-function dealCard(deck: Array<Card>) {
+export function dealCard(deck: Array<Card>) {
   return deck.pop();
 }
