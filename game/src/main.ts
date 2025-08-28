@@ -27,9 +27,20 @@ k.scene("game", () => {
   let deck: Array<Card> = generateDeck();
   shuffleDeck(deck);
 
-  let card: Card = dealCard(deck);
+  let hand: Array<Card> = [];
+  hand.push(dealCard(deck));
+  hand.push(dealCard(deck));
 
-  k.add([k.sprite("cards", { frame: card.frame }), k.pos(80, 40)]);
+  showHand(hand);
+
+  function showHand(hand: Array<Card>): void {
+    for (let i = 0; i < hand.length; i++) {
+      k.add([
+        k.sprite("cards", { frame: hand[i].frame }),
+        k.pos(40 + 64 * i, 40),
+      ]);
+    }
+  }
 });
 
 k.go("game");
