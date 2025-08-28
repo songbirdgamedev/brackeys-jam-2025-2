@@ -2,9 +2,6 @@ import kaplay from "kaplay";
 import type { Card } from "./cards";
 import { generateDeck, shuffleDeck, dealCard } from "./cards";
 
-const SPRITE_WIDTH = 14;
-const SPRITE_HEIGHT = 4;
-
 const k = kaplay({
   width: 640,
   height: 480,
@@ -22,8 +19,8 @@ k.loadRoot("./"); // A good idea for Itch.io publishing later
 
 // load cards sprites
 k.loadSprite("cards", "sprites/cards.png", {
-  sliceX: SPRITE_WIDTH,
-  sliceY: SPRITE_HEIGHT,
+  sliceX: 14,
+  sliceY: 4,
 });
 
 k.scene("game", () => {
@@ -31,9 +28,8 @@ k.scene("game", () => {
   shuffleDeck(deck);
 
   let card: Card = dealCard(deck);
-  let frame: number = card.value + card.suit * SPRITE_WIDTH;
 
-  k.add([k.sprite("cards", { frame: frame }), k.pos(80, 40)]);
+  k.add([k.sprite("cards", { frame: card.frame }), k.pos(80, 40)]);
 });
 
 k.go("game");

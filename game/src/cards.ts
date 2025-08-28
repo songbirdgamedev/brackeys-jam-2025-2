@@ -1,9 +1,25 @@
 const suits: Array<string> = ["hearts", "diamonds", "clubs", "spades"];
-const values: Array<number> = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const values: Array<string> = [
+  "A",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "J",
+  "Q",
+  "K",
+];
 
 export type Card = {
-  suit: number;
-  value: number;
+  suit: string;
+  value: string;
+  points: number;
+  frame: number;
 };
 
 export function generateDeck(): Array<Card> {
@@ -12,8 +28,10 @@ export function generateDeck(): Array<Card> {
   for (let i = 0; i < suits.length; i++) {
     for (let j = 0; j < values.length; j++) {
       deck.push({
-        suit: i,
+        suit: suits[i],
         value: values[j],
+        points: j < 10 ? j + 1 : 10,
+        frame: j + i * 14,
       });
     }
   }
@@ -30,6 +48,6 @@ export function shuffleDeck(deck: Array<Card>): void {
   }
 }
 
-export function dealCard(deck: Array<Card>) {
+export function dealCard(deck: Array<Card>): Card {
   return deck.pop();
 }
