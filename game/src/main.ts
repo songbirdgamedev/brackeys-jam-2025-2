@@ -2,6 +2,13 @@ import kaplay from "kaplay";
 import type { Card } from "./cards";
 import { generateDeck, shuffleDeck, dealCard } from "./cards";
 
+enum Result {
+  Bust,
+  Hold,
+  Win,
+  Blackjack,
+}
+
 const k = kaplay({
   width: 640,
   height: 480,
@@ -42,9 +49,18 @@ k.scene("game", () => {
     }
   }
 
+  function checkHand(hand: Array<Card>): Result {
+    const [minScore, maxScore] = calculatePoints(hand);
+    if (minScore > 21) return Result.Bust;
+    if (maxScore === 21 && hand.length === 2) return Result.Blackjack;
+    if (minScore === 21 || maxScore === 21) return Result.Win;
+    return Result.Hold;
+  }
+
   function calculatePoints(hand: Array<Card>): [number, number] {
     // aces can be worth either 1 or 11 so we need to keep track of them
     let aceCount: number = 0;
+
     let score: number = hand.reduce((total, card) => {
       if (card.points === 1) aceCount++;
       return total + card.points;
