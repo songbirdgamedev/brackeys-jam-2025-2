@@ -41,6 +41,18 @@ k.scene("game", () => {
       ]);
     }
   }
+
+  function calculatePoints(hand: Array<Card>): [number, number] {
+    // aces can be worth either 1 or 11 so we need to keep track of them
+    let aceCount: number = 0;
+    let score: number = hand.reduce((total, card) => {
+      if (card.points === 1) aceCount++;
+      return total + card.points;
+    }, 0);
+
+    // returns minimum and maximum score
+    return [score, score + aceCount * 10];
+  }
 });
 
 k.go("game");
