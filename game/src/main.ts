@@ -74,7 +74,13 @@ k.scene("game", () => {
   // add onClick functions
   hit.onClick(() => {
     hand.push(dealCard(deck));
-    showHand(hand);
+    const result: Result = showHand(hand);
+
+    if (result === Result.Bust) {
+      // lose
+    } else if (result === Result.Win) {
+      // win
+    }
   });
 
   // add card deck sprite
@@ -84,6 +90,12 @@ k.scene("game", () => {
     k.anchor("center"),
   ]);
 
+  // display score
+  const score = k.add([
+    k.pos(SPRITE_SIZE / 2, SCREEN_HEIGHT - 100),
+    k.text("Score: 0", { size: 16 }),
+  ]);
+
   let deck: Array<Card> = generateDeck();
   shuffleDeck(deck);
 
@@ -91,19 +103,24 @@ k.scene("game", () => {
   hand.push(dealCard(deck));
   hand.push(dealCard(deck));
 
-  showHand(hand);
+  const result: Result = showHand(hand);
+  if (result === Result.Blackjack) {
+    // win
+  }
 
-  function showHand(hand: Array<Card>): void {
+  function showHand(hand: Array<Card>): Result {
     for (let i = 0; i < hand.length; i++) {
       k.add([
         k.sprite("cards", { frame: hand[i].frame }),
         k.pos(40 + SPRITE_SIZE * i, 40),
       ]);
     }
+    return checkHand(hand);
   }
 
   function checkHand(hand: Array<Card>): Result {
     const [minScore, maxScore] = calculatePoints(hand);
+    score.text = `Score: ${maxScore}`;
     if (minScore > 21) return Result.Bust;
     if (maxScore === 21 && hand.length === 2) return Result.Blackjack;
     if (minScore === 21 || maxScore === 21) return Result.Win;
