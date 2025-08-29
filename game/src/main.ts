@@ -3,8 +3,6 @@ import kaplay from "kaplay";
 import type { Card } from "./cards";
 import { generateDeck, shuffleDeck, dealCard } from "./cards";
 
-const SCREEN_WIDTH: number = 640;
-const SCREEN_HEIGHT: number = 360;
 const SPRITE_SIZE: number = 64;
 
 enum Result {
@@ -15,8 +13,8 @@ enum Result {
 }
 
 const k = kaplay({
-  width: SCREEN_WIDTH,
-  height: SCREEN_HEIGHT,
+  width: 640,
+  height: 360,
   scale: 2,
   stretch: false,
   letterbox: false,
@@ -43,14 +41,14 @@ k.loadSprite("cards", "sprites/cards.png", {
 k.scene("game", () => {
   // add buttons
   const hit = k.add([
-    k.pos(200, 300),
+    k.pos(k.width() - 100, k.height() - SPRITE_SIZE * 2),
     k.rect(100, 32, { radius: 4 }),
     k.area(),
     k.anchor("center"),
   ]);
 
   const stand = k.add([
-    k.pos(400, 300),
+    k.pos(k.width() - 100, k.height() - SPRITE_SIZE),
     k.rect(100, 32, { radius: 4 }),
     k.area(),
     k.anchor("center"),
@@ -86,13 +84,13 @@ k.scene("game", () => {
   // add card deck sprite
   k.add([
     k.sprite("cards", { frame: 27 }),
-    k.pos(SPRITE_SIZE, SCREEN_HEIGHT / 2),
+    k.pos(SPRITE_SIZE, k.height() / 2),
     k.anchor("center"),
   ]);
 
   // display score
   const score = k.add([
-    k.pos(SPRITE_SIZE / 2, SCREEN_HEIGHT - 100),
+    k.pos(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE),
     k.text("Score: 0", { size: 16 }),
   ]);
 
@@ -112,7 +110,11 @@ k.scene("game", () => {
     for (let i = 0; i < hand.length; i++) {
       k.add([
         k.sprite("cards", { frame: hand[i].frame }),
-        k.pos(40 + SPRITE_SIZE * i, 40),
+        k.pos(
+          48 * (i < 6 ? i + 4 : i - 2),
+          k.height() - SPRITE_SIZE * (i < 6 ? 2 : 1)
+        ),
+        k.anchor("center"),
       ]);
     }
     return checkHand(hand);
