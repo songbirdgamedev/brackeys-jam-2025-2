@@ -1,5 +1,5 @@
 import { crew } from "@kaplayjs/crew";
-import kaplay from "kaplay";
+import kaplay, { GameObj } from "kaplay";
 import type { Card } from "./cards";
 import { generateDeck, shuffleDeck, dealCard } from "./cards";
 
@@ -126,48 +126,38 @@ k.scene("game", () => {
   }
 
   function startDealerHand(hand: Array<Card>): void {
-    k.add([
-      k.sprite("cards", { frame: hand[0].frame }),
-      k.pos(CARD_SPACING * 4, SPRITE_SIZE),
-      k.anchor("center"),
-      "card",
-    ]);
-
-    k.add([
-      k.sprite("cards", { frame: CARD_BACK_FRAME }),
-      k.pos(CARD_SPACING * 5, SPRITE_SIZE),
-      k.anchor("center"),
-      "card",
-    ]);
+    makeCard(hand[0].frame, CARD_SPACING * 4, SPRITE_SIZE);
+    makeCard(CARD_BACK_FRAME, CARD_SPACING * 5, SPRITE_SIZE);
   }
 
   function showDealerHand(hand: Array<Card>): void {
     for (let i = 0; i < hand.length; i++) {
-      k.add([
-        k.sprite("cards", { frame: hand[i].frame }),
-        k.pos(
-          CARD_SPACING * (i < 6 ? i + 4 : i - 2),
-          SPRITE_SIZE * (i < 6 ? 1 : 2)
-        ),
-        k.anchor("center"),
-        "card",
-      ]);
+      makeCard(
+        hand[i].frame,
+        CARD_SPACING * (i < 6 ? i + 4 : i - 2),
+        SPRITE_SIZE * (i < 6 ? 1 : 2)
+      );
     }
   }
 
   function showHand(hand: Array<Card>): Result {
     for (let i = 0; i < hand.length; i++) {
-      k.add([
-        k.sprite("cards", { frame: hand[i].frame }),
-        k.pos(
-          CARD_SPACING * (i < 6 ? i + 4 : i - 2),
-          k.height() - SPRITE_SIZE * (i < 6 ? 2 : 1)
-        ),
-        k.anchor("center"),
-        "card",
-      ]);
+      makeCard(
+        hand[i].frame,
+        CARD_SPACING * (i < 6 ? i + 4 : i - 2),
+        k.height() - SPRITE_SIZE * (i < 6 ? 2 : 1)
+      );
     }
     return checkHand(hand);
+  }
+
+  function makeCard(frame: number, posX: number, posY: number): GameObj {
+    return k.add([
+      k.sprite("cards", { frame: frame }),
+      k.pos(posX, posY),
+      k.anchor("center"),
+      "card",
+    ]);
   }
 
   function checkHand(hand: Array<Card>): Result {
