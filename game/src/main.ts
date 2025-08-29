@@ -1,3 +1,4 @@
+import { crew } from "@kaplayjs/crew";
 import kaplay from "kaplay";
 import type { Card } from "./cards";
 import { generateDeck, shuffleDeck, dealCard } from "./cards";
@@ -11,18 +12,23 @@ enum Result {
 
 const k = kaplay({
   width: 640,
-  height: 480,
+  height: 360,
   scale: 2,
   stretch: false,
   letterbox: false,
   debug: true,
+  font: "happy",
   crisp: false,
   background: "000000",
   texFilter: "nearest",
   global: false,
+  plugins: [crew],
 });
 
 k.loadRoot("./"); // A good idea for Itch.io publishing later
+
+// load font
+k.loadCrew("font", "happy");
 
 // load cards sprites
 k.loadSprite("cards", "sprites/cards.png", {
@@ -31,6 +37,42 @@ k.loadSprite("cards", "sprites/cards.png", {
 });
 
 k.scene("game", () => {
+  // add buttons
+  const hit = k.add([
+    k.pos(200, 300),
+    k.rect(100, 32, { radius: 4 }),
+    k.area(),
+    k.anchor("center"),
+  ]);
+
+  const stand = k.add([
+    k.pos(400, 300),
+    k.rect(100, 32, { radius: 4 }),
+    k.area(),
+    k.anchor("center"),
+  ]);
+
+  // add text to buttons
+  k.add([
+    k.pos(hit.pos),
+    k.text("Hit", { size: 24 }),
+    k.color(0, 0, 0),
+    k.anchor("center"),
+  ]);
+
+  k.add([
+    k.pos(stand.pos),
+    k.text("Stand", { size: 24 }),
+    k.color(0, 0, 0),
+    k.anchor("center"),
+  ]);
+
+  // add onClick functions
+  hit.onClick(() => {
+    hand.push(dealCard(deck));
+    showHand(hand);
+  });
+
   let deck: Array<Card> = generateDeck();
   shuffleDeck(deck);
 
