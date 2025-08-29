@@ -45,16 +45,20 @@ k.scene("game", () => {
   const hit = k.add([
     k.pos(k.width() - 100, k.height() - SPRITE_SIZE * 2),
     k.rect(100, 32, { radius: 4 }),
-    k.area(),
+    k.area({ cursor: "pointer" }),
     k.anchor("center"),
   ]);
 
   const stand = k.add([
     k.pos(k.width() - 100, k.height() - SPRITE_SIZE),
     k.rect(100, 32, { radius: 4 }),
-    k.area(),
+    k.area({ cursor: "pointer" }),
     k.anchor("center"),
   ]);
+
+  // reset cursor on hover end
+  hit.onHoverEnd(() => k.setCursor("default"));
+  stand.onHoverEnd(() => k.setCursor("default"));
 
   // add text to buttons
   k.add([
