@@ -47,6 +47,7 @@ k.scene("game", () => {
     k.rect(100, 32, { radius: 4 }),
     k.area({ cursor: "pointer" }),
     k.anchor("center"),
+    "button",
   ]);
 
   const stand = k.add([
@@ -54,25 +55,25 @@ k.scene("game", () => {
     k.rect(100, 32, { radius: 4 }),
     k.area({ cursor: "pointer" }),
     k.anchor("center"),
+    "button",
   ]);
 
   // reset cursor on hover end
-  hit.onHoverEnd(() => k.setCursor("default"));
-  stand.onHoverEnd(() => k.setCursor("default"));
+  k.onHoverEnd("button", () => k.setCursor("default"));
 
   // add text to buttons
-  k.add([
-    k.pos(hit.pos),
+  hit.add([
     k.text("Hit", { size: 24 }),
     k.color(0, 0, 0),
     k.anchor("center"),
+    "text",
   ]);
 
-  k.add([
-    k.pos(stand.pos),
+  stand.add([
     k.text("Stand", { size: 24 }),
     k.color(0, 0, 0),
     k.anchor("center"),
+    "text",
   ]);
 
   // add hit function
@@ -103,6 +104,7 @@ k.scene("game", () => {
   const score = k.add([
     k.pos(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE),
     k.text("Score: 0", { size: 16 }),
+    "text",
   ]);
 
   let deck: Array<Card> = generateDeck();
@@ -128,12 +130,14 @@ k.scene("game", () => {
       k.sprite("cards", { frame: hand[0].frame }),
       k.pos(CARD_SPACING * 4, SPRITE_SIZE),
       k.anchor("center"),
+      "card",
     ]);
 
     k.add([
       k.sprite("cards", { frame: CARD_BACK_FRAME }),
       k.pos(CARD_SPACING * 5, SPRITE_SIZE),
       k.anchor("center"),
+      "card",
     ]);
   }
 
@@ -146,6 +150,7 @@ k.scene("game", () => {
           SPRITE_SIZE * (i < 6 ? 1 : 2)
         ),
         k.anchor("center"),
+        "card",
       ]);
     }
   }
@@ -159,6 +164,7 @@ k.scene("game", () => {
           k.height() - SPRITE_SIZE * (i < 6 ? 2 : 1)
         ),
         k.anchor("center"),
+        "card",
       ]);
     }
     return checkHand(hand);
