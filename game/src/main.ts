@@ -4,6 +4,8 @@ import type { Card } from "./cards";
 import { generateDeck, shuffleDeck, dealCard } from "./cards";
 
 const SPRITE_SIZE: number = 64;
+const CARD_BACK_FRAME: number = 27;
+const CARD_SPACING: number = 48;
 
 enum Result {
   Bust,
@@ -69,7 +71,7 @@ k.scene("game", () => {
     k.anchor("center"),
   ]);
 
-  // add onClick functions
+  // add hit function
   hit.onClick(() => {
     hand.push(dealCard(deck));
     const result: Result = showHand(hand);
@@ -81,9 +83,14 @@ k.scene("game", () => {
     }
   });
 
+  // add stand function
+  stand.onClick(() => {
+    showDealerHand(dealerHand);
+  });
+
   // add card deck sprite
   k.add([
-    k.sprite("cards", { frame: 27 }),
+    k.sprite("cards", { frame: CARD_BACK_FRAME }),
     k.pos(SPRITE_SIZE, k.height() / 2),
     k.anchor("center"),
   ]);
@@ -101,9 +108,42 @@ k.scene("game", () => {
   hand.push(dealCard(deck));
   hand.push(dealCard(deck));
 
+  let dealerHand: Array<Card> = [];
+  dealerHand.push(dealCard(deck));
+  dealerHand.push(dealCard(deck));
+
+  startDealerHand(dealerHand);
+
   const result: Result = showHand(hand);
   if (result === Result.Blackjack) {
     // win
+  }
+
+  function startDealerHand(hand: Array<Card>): void {
+    k.add([
+      k.sprite("cards", { frame: hand[0].frame }),
+      k.pos(CARD_SPACING * 4, SPRITE_SIZE),
+      k.anchor("center"),
+    ]);
+
+    k.add([
+      k.sprite("cards", { frame: CARD_BACK_FRAME }),
+      k.pos(CARD_SPACING * 5, SPRITE_SIZE),
+      k.anchor("center"),
+    ]);
+  }
+
+  function showDealerHand(hand: Array<Card>): void {
+    for (let i = 0; i < hand.length; i++) {
+      k.add([
+        k.sprite("cards", { frame: hand[i].frame }),
+        k.pos(
+          CARD_SPACING * (i < 6 ? i + 4 : i - 2),
+          SPRITE_SIZE * (i < 6 ? 1 : 2)
+        ),
+        k.anchor("center"),
+      ]);
+    }
   }
 
   function showHand(hand: Array<Card>): Result {
@@ -111,7 +151,7 @@ k.scene("game", () => {
       k.add([
         k.sprite("cards", { frame: hand[i].frame }),
         k.pos(
-          48 * (i < 6 ? i + 4 : i - 2),
+          CARD_SPACING * (i < 6 ? i + 4 : i - 2),
           k.height() - SPRITE_SIZE * (i < 6 ? 2 : 1)
         ),
         k.anchor("center"),
