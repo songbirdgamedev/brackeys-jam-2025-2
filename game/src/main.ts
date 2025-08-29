@@ -126,37 +126,57 @@ k.scene("game", () => {
   }
 
   function startDealerHand(hand: Array<Card>): void {
-    makeCard(hand[0].frame, CARD_SPACING * 4, SPRITE_SIZE);
-    makeCard(CARD_BACK_FRAME, CARD_SPACING * 5, SPRITE_SIZE);
+    makeCard(hand[0].frame, CARD_SPACING * 4, SPRITE_SIZE, "dealerCard");
+    makeCard(CARD_BACK_FRAME, CARD_SPACING * 5, SPRITE_SIZE, "holeCard");
   }
 
   function showDealerHand(hand: Array<Card>): void {
-    for (let i = 0; i < hand.length; i++) {
+    const [holeCard] = k.get("holeCard");
+
+    if (holeCard) {
+      holeCard.frame = hand[1].frame;
+      holeCard.untag("holeCard");
+      holeCard.tag("dealerCard");
+    }
+
+    const cards = k.get("dealerCard");
+
+    for (let i = cards.length; i < hand.length; i++) {
       makeCard(
         hand[i].frame,
         CARD_SPACING * (i < 6 ? i + 4 : i - 2),
-        SPRITE_SIZE * (i < 6 ? 1 : 2)
+        SPRITE_SIZE * (i < 6 ? 1 : 2),
+        "dealerCard"
       );
     }
   }
 
   function showHand(hand: Array<Card>): Result {
-    for (let i = 0; i < hand.length; i++) {
+    const cards = k.get("card");
+
+    for (let i = cards.length; i < hand.length; i++) {
       makeCard(
         hand[i].frame,
         CARD_SPACING * (i < 6 ? i + 4 : i - 2),
-        k.height() - SPRITE_SIZE * (i < 6 ? 2 : 1)
+        k.height() - SPRITE_SIZE * (i < 6 ? 2 : 1),
+        "card"
       );
     }
+
     return checkHand(hand);
   }
 
-  function makeCard(frame: number, posX: number, posY: number): GameObj {
+  function makeCard(
+    frame: number,
+    posX: number,
+    posY: number,
+    tag: string
+  ): GameObj {
     return k.add([
       k.sprite("cards", { frame: frame }),
       k.pos(posX, posY),
       k.anchor("center"),
-      "card",
+      tag,
     ]);
   }
 
