@@ -3,6 +3,10 @@ import kaplay from "kaplay";
 import type { Card } from "./cards";
 import { generateDeck, shuffleDeck, dealCard } from "./cards";
 
+const SCREEN_WIDTH: number = 640;
+const SCREEN_HEIGHT: number = 360;
+const SPRITE_SIZE: number = 64;
+
 enum Result {
   Bust,
   Hold,
@@ -11,8 +15,8 @@ enum Result {
 }
 
 const k = kaplay({
-  width: 640,
-  height: 360,
+  width: SCREEN_WIDTH,
+  height: SCREEN_HEIGHT,
   scale: 2,
   stretch: false,
   letterbox: false,
@@ -73,6 +77,13 @@ k.scene("game", () => {
     showHand(hand);
   });
 
+  // add card deck sprite
+  k.add([
+    k.sprite("cards", { frame: 27 }),
+    k.pos(SPRITE_SIZE, SCREEN_HEIGHT / 2),
+    k.anchor("center"),
+  ]);
+
   let deck: Array<Card> = generateDeck();
   shuffleDeck(deck);
 
@@ -86,7 +97,7 @@ k.scene("game", () => {
     for (let i = 0; i < hand.length; i++) {
       k.add([
         k.sprite("cards", { frame: hand[i].frame }),
-        k.pos(40 + 64 * i, 40),
+        k.pos(40 + SPRITE_SIZE * i, 40),
       ]);
     }
   }
