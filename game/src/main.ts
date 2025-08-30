@@ -129,7 +129,7 @@ k.scene("game", () => {
 
   // add messages to display win/lose state
   const message = k.add([
-    k.pos(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE * 2),
+    k.pos(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE * 1.5),
     k.text("", { size: 16 }),
     "text",
   ]);
@@ -248,14 +248,23 @@ k.scene("game", () => {
 
   function checkHand(hand: Array<Card>, label: string): Result {
     const [minScore, maxScore] = calculatePoints(hand);
-
-    const text = `${label}: ${maxScore > 21 ? minScore : maxScore}`;
-    if (label === "Score") score.text = text;
-    else if (label === "Dealer") dealerScore.text = text;
+    showPoints(label, minScore, maxScore);
 
     if (minScore > 21) return Result.Bust;
     if (minScore === 21 || maxScore === 21) return Result.Win;
     return Result.Hold;
+  }
+
+  function showPoints(label: string, minScore: number, maxScore: number): void {
+    let scoreToDisplay = maxScore;
+
+    while (scoreToDisplay !== minScore && scoreToDisplay > 21) {
+      scoreToDisplay -= 10;
+    }
+
+    if (label === "Score") score.text = `${label}: ${scoreToDisplay}`;
+    else if (label === "Dealer")
+      dealerScore.text = `${label}: ${scoreToDisplay}`;
   }
 
   function calculatePoints(hand: Array<Card>): [number, number] {
@@ -272,8 +281,6 @@ k.scene("game", () => {
   }
 
   function finishRound(result: Result): void {
-    nextRound.hidden = false;
-    nextRound.paused = false;
     hit.paused = true;
     stand.paused = true;
     k.setCursor("default");
@@ -288,8 +295,25 @@ k.scene("game", () => {
       } else {
         // payout big
       }
-      // show next round button
+      return enableNextButton();
     }
+
+    if (result === Result.Bust) {
+      message.text = "Bust :(";
+      // lose bet
+      return enableNextButton();
+    }
+
+    if (result === Result.Win) {
+      message.text = "21!";
+      // check dealer cards
+      return enableNextButton();
+    }
+  }
+
+  function enableNextButton(): void {
+    nextRound.hidden = false;
+    nextRound.paused = false;
   }
 });
 
