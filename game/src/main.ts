@@ -11,7 +11,6 @@ enum Result {
   Bust,
   Hold,
   Win,
-  Blackjack,
 }
 
 const k = kaplay({
@@ -81,11 +80,13 @@ k.scene("game", () => {
     hand.push(dealCard(deck));
     const result: Result = showHand(hand);
 
-    if (result === Result.Bust) {
-      // lose
-    } else if (result === Result.Win) {
-      // win
-    }
+    if (result === Result.Hold) return;
+
+    hit.paused = true;
+    stand.paused = true;
+    k.setCursor("default");
+
+    message.text = result === Result.Win ? "Win!" : "Bust :(";
   });
 
   // add stand function
@@ -107,6 +108,13 @@ k.scene("game", () => {
     "text",
   ]);
 
+  // add message to display win/lose state
+  const message = k.add([
+    k.pos(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE * 2),
+    k.text("", { size: 16 }),
+    "text",
+  ]);
+
   let deck: Array<Card> = generateDeck();
   shuffleDeck(deck);
 
@@ -121,8 +129,12 @@ k.scene("game", () => {
   startDealerHand(dealerHand);
 
   const result: Result = showHand(hand);
-  if (result === Result.Blackjack) {
-    // win
+  if (result === Result.Win) {
+    message.text = "Blackjack!";
+    hit.paused = true;
+    stand.paused = true;
+    // reveal dealer card (do they also draw more?)
+    // if dealer also has blackjack, tie
   }
 
   function startDealerHand(hand: Array<Card>): void {
@@ -182,9 +194,8 @@ k.scene("game", () => {
 
   function checkHand(hand: Array<Card>): Result {
     const [minScore, maxScore] = calculatePoints(hand);
-    score.text = `Score: ${maxScore}`;
+    score.text = `Score: ${maxScore > 21 ? minScore : maxScore}`;
     if (minScore > 21) return Result.Bust;
-    if (maxScore === 21 && hand.length === 2) return Result.Blackjack;
     if (minScore === 21 || maxScore === 21) return Result.Win;
     return Result.Hold;
   }
