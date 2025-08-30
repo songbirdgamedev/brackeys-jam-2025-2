@@ -11,6 +11,7 @@ enum Result {
   Bust,
   Hold,
   Win,
+  Blackjack,
 }
 
 const k = kaplay({
@@ -57,6 +58,14 @@ k.scene("game", () => {
     "button",
   ]);
 
+  const nextRound = k.add([
+    k.pos(k.width() - 100, SPRITE_SIZE),
+    k.rect(100, 32, { radius: 4 }),
+    k.area({ cursor: "pointer" }),
+    k.anchor("center"),
+    "button",
+  ]);
+
   // reset cursor on hover end
   k.onHoverEnd("button", () => k.setCursor("default"));
 
@@ -75,32 +84,27 @@ k.scene("game", () => {
     "text",
   ]);
 
+  nextRound.add([
+    k.text("Next", { size: 24 }),
+    k.color(0, 0, 0),
+    k.anchor("center"),
+    "text",
+  ]);
+
   // add hit function
   hit.onClick(() => {
     hand.push(dealCard(deck));
     const result: Result = showHand(hand);
-
-    if (result === Result.Hold) return;
-
-    hit.paused = true;
-    stand.paused = true;
-    k.setCursor("default");
-
-    message.text = result === Result.Win ? "Win!" : "Bust :(";
+    if (result !== Result.Hold) finishRound(result);
   });
 
   // add stand function
   stand.onClick(() => {
-    const dealerResult: Result = showDealerHand(dealerHand);
-
-    hit.paused = true;
-    stand.paused = true;
-    k.setCursor("default");
-
-    if (dealerResult === Result.Win) {
-      dealerMessage.text = "Blackjack";
-    }
+    finishRound(Result.Hold);
   });
+
+  // add next round function
+  nextRound.onClick(startRound);
 
   // add card deck sprite
   k.add([
@@ -123,7 +127,7 @@ k.scene("game", () => {
     "text",
   ]);
 
-  // add message to display win/lose state
+  // add messages to display win/lose state
   const message = k.add([
     k.pos(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE * 2),
     k.text("", { size: 16 }),
@@ -136,26 +140,66 @@ k.scene("game", () => {
     "text",
   ]);
 
-  let deck: Array<Card> = generateDeck();
-  shuffleDeck(deck);
+  // initialise deck and hand variables
+  let deck: Array<Card>;
+  let hand: Array<Card>;
+  let dealerHand: Array<Card>;
 
-  let hand: Array<Card> = [];
-  hand.push(dealCard(deck));
-  hand.push(dealCard(deck));
+  // start game
+  startRound();
 
-  let dealerHand: Array<Card> = [];
-  dealerHand.push(dealCard(deck));
-  dealerHand.push(dealCard(deck));
+  function startRound(): void {
+    // hide and disable next round button
+    nextRound.hidden = true;
+    nextRound.paused = true;
 
-  startDealerHand(dealerHand);
+    // hide any messages
+    message.text = "";
+    dealerMessage.text = "";
 
-  const result: Result = showHand(hand);
-  if (result === Result.Win) {
-    message.text = "Blackjack!";
-    hit.paused = true;
-    stand.paused = true;
-    // reveal dealer card (do they also draw more?)
-    // if dealer also has blackjack, tie
+    // reset hands
+    hand = [];
+    dealerHand = [];
+    k.destroyAll("card");
+    k.destroyAll("dealerCard");
+
+    // create deck
+    deck = generateDeck();
+    shuffleDeck(deck);
+
+    // deal cards
+    hand.push(dealCard(deck));
+    hand.push(dealCard(deck));
+
+    dealerHand.push(dealCard(deck));
+    dealerHand.push(dealCard(deck));
+
+    // show initial dealer cards
+    startDealerHand(dealerHand);
+
+    // enable gameplay buttons
+    hit.paused = false;
+    stand.paused = false;
+
+    // show hand and check result
+    const result: Result = showHand(hand);
+    if (result === Result.Win) {
+      finishRound(Result.Blackjack);
+    }
+  }
+
+  function makeCard(
+    frame: number,
+    posX: number,
+    posY: number,
+    tag: string
+  ): GameObj {
+    return k.add([
+      k.sprite("cards", { frame: frame }),
+      k.pos(posX, posY),
+      k.anchor("center"),
+      tag,
+    ]);
   }
 
   function startDealerHand(hand: Array<Card>): void {
@@ -202,20 +246,6 @@ k.scene("game", () => {
     return checkHand(hand, "Score");
   }
 
-  function makeCard(
-    frame: number,
-    posX: number,
-    posY: number,
-    tag: string
-  ): GameObj {
-    return k.add([
-      k.sprite("cards", { frame: frame }),
-      k.pos(posX, posY),
-      k.anchor("center"),
-      tag,
-    ]);
-  }
-
   function checkHand(hand: Array<Card>, label: string): Result {
     const [minScore, maxScore] = calculatePoints(hand);
 
@@ -239,6 +269,27 @@ k.scene("game", () => {
 
     // returns minimum and maximum score
     return [score, score + aceCount * 10];
+  }
+
+  function finishRound(result: Result): void {
+    nextRound.hidden = false;
+    nextRound.paused = false;
+    hit.paused = true;
+    stand.paused = true;
+    k.setCursor("default");
+
+    const dealerResult: Result = showDealerHand(dealerHand);
+
+    if (result === Result.Blackjack) {
+      message.text = "Blackjack!";
+      if (dealerResult === Result.Win) {
+        dealerMessage.text = "Tie.";
+        // return bet
+      } else {
+        // payout big
+      }
+      // show next round button
+    }
   }
 });
 
