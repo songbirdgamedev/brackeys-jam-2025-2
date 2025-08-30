@@ -91,7 +91,15 @@ k.scene("game", () => {
 
   // add stand function
   stand.onClick(() => {
-    showDealerHand(dealerHand);
+    const dealerResult: Result = showDealerHand(dealerHand);
+
+    hit.paused = true;
+    stand.paused = true;
+    k.setCursor("default");
+
+    if (dealerResult === Result.Win) {
+      dealerMessage.text = "Blackjack";
+    }
   });
 
   // add card deck sprite
@@ -108,9 +116,22 @@ k.scene("game", () => {
     "text",
   ]);
 
+  // display dealer score
+  const dealerScore = k.add([
+    k.pos(SPRITE_SIZE / 2, SPRITE_SIZE / 2),
+    k.text("Dealer: 0", { size: 16 }),
+    "text",
+  ]);
+
   // add message to display win/lose state
   const message = k.add([
     k.pos(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE * 2),
+    k.text("", { size: 16 }),
+    "text",
+  ]);
+
+  const dealerMessage = k.add([
+    k.pos(SPRITE_SIZE / 2, SPRITE_SIZE),
     k.text("", { size: 16 }),
     "text",
   ]);
@@ -140,9 +161,10 @@ k.scene("game", () => {
   function startDealerHand(hand: Array<Card>): void {
     makeCard(hand[0].frame, CARD_SPACING * 4, SPRITE_SIZE, "dealerCard");
     makeCard(CARD_BACK_FRAME, CARD_SPACING * 5, SPRITE_SIZE, "holeCard");
+    dealerScore.text = `Dealer: ${hand[0].points === 1 ? 11 : hand[0].points}`;
   }
 
-  function showDealerHand(hand: Array<Card>): void {
+  function showDealerHand(hand: Array<Card>): Result {
     const [holeCard] = k.get("holeCard");
 
     if (holeCard) {
@@ -161,6 +183,8 @@ k.scene("game", () => {
         "dealerCard"
       );
     }
+
+    return checkHand(hand, "Dealer");
   }
 
   function showHand(hand: Array<Card>): Result {
@@ -175,7 +199,7 @@ k.scene("game", () => {
       );
     }
 
-    return checkHand(hand);
+    return checkHand(hand, "Score");
   }
 
   function makeCard(
@@ -192,9 +216,13 @@ k.scene("game", () => {
     ]);
   }
 
-  function checkHand(hand: Array<Card>): Result {
+  function checkHand(hand: Array<Card>, label: string): Result {
     const [minScore, maxScore] = calculatePoints(hand);
-    score.text = `Score: ${maxScore > 21 ? minScore : maxScore}`;
+
+    const text = `${label}: ${maxScore > 21 ? minScore : maxScore}`;
+    if (label === "Score") score.text = text;
+    else if (label === "Dealer") dealerScore.text = text;
+
     if (minScore > 21) return Result.Bust;
     if (minScore === 21 || maxScore === 21) return Result.Win;
     return Result.Hold;
