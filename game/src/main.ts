@@ -78,6 +78,16 @@ k.scene("game", () => {
     return k.add([k.pos(posX, posY), k.text(text, { size: 16 }), "text"]);
   }
 
+  function disableButton(button: GameObj): void {
+    button.hidden = true;
+    button.paused = true;
+  }
+
+  function enableButton(button: GameObj): void {
+    button.hidden = false;
+    button.paused = false;
+  }
+
   // add buttons
   const hit = makeButton(k.height() / 2 + SPRITE_SIZE);
   const stand = makeButton(k.height() / 2 + SPRITE_SIZE * 2);
@@ -109,7 +119,10 @@ k.scene("game", () => {
   });
 
   // add next round function
-  nextRound.onClick(startRound);
+  nextRound.onClick(resetRound);
+
+  // add start function
+  start.onClick(startRound);
 
   // add card deck sprite
   k.add([
@@ -137,12 +150,18 @@ k.scene("game", () => {
   let dealerHand: Array<Card>;
 
   // start game
-  startRound();
+  resetRound();
 
-  function startRound(): void {
-    // hide and disable next round button
-    nextRound.hidden = true;
-    nextRound.paused = true;
+  function resetRound(): void {
+    // show and enable bet and start buttons
+    enableButton(bet);
+    enableButton(start);
+
+    // hide and disable unused buttons
+    disableButton(nextRound);
+    disableButton(hit);
+    disableButton(stand);
+    k.setCursor("default");
 
     // hide any messages
     message.text = "";
@@ -153,6 +172,13 @@ k.scene("game", () => {
     dealerHand = [];
     k.destroyAll("card");
     k.destroyAll("dealerCard");
+  }
+
+  function startRound(): void {
+    // hide and disable unused buttons
+    disableButton(bet);
+    disableButton(start);
+    k.setCursor("default");
 
     // create deck
     deck = generateDeck();
@@ -169,10 +195,8 @@ k.scene("game", () => {
     startDealerHand(dealerHand);
 
     // show and enable gameplay buttons
-    hit.hidden = false;
-    hit.paused = false;
-    stand.hidden = false;
-    stand.paused = false;
+    enableButton(hit);
+    enableButton(stand);
 
     // show hand and check result
     if (showHand(hand) === 21) {
@@ -255,10 +279,8 @@ k.scene("game", () => {
   }
 
   function finishRound(result: Result): void {
-    hit.hidden = true;
-    hit.paused = true;
-    stand.hidden = true;
-    stand.paused = true;
+    disableButton(hit);
+    disableButton(stand);
     k.setCursor("default");
 
     const dealerScore: number = showDealerHand(dealerHand);
@@ -266,7 +288,7 @@ k.scene("game", () => {
     if (result === Result.Bust) {
       message.text = "Bust :(";
       // lose bet
-      return enableNextButton();
+      return enableButton(nextRound);
     }
 
     if (result === Result.Blackjack) {
@@ -277,7 +299,7 @@ k.scene("game", () => {
       } else {
         // payout big
       }
-      return enableNextButton();
+      return enableButton(nextRound);
     }
 
     if (result === Result.Win) {
@@ -290,7 +312,7 @@ k.scene("game", () => {
   function drawDealerCards(dealerScore: number): void {
     if (dealerScore > 16) {
       showResult(dealerScore);
-      return enableNextButton();
+      return enableButton(nextRound);
     }
 
     k.wait(1, () => {
@@ -308,11 +330,6 @@ k.scene("game", () => {
     } else {
       dealerMessage.text = "You lose.";
     }
-  }
-
-  function enableNextButton(): void {
-    nextRound.hidden = false;
-    nextRound.paused = false;
   }
 });
 
