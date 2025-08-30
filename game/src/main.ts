@@ -41,55 +41,59 @@ k.loadSprite("cards", "sprites/cards.png", {
 });
 
 k.scene("game", () => {
+  function makeCard(
+    frame: number,
+    posX: number,
+    posY: number,
+    tag: string
+  ): GameObj {
+    return k.add([
+      k.sprite("cards", { frame: frame }),
+      k.pos(posX, posY),
+      k.anchor("center"),
+      tag,
+    ]);
+  }
+
+  function makeButton(posY: number): GameObj {
+    return k.add([
+      k.pos(k.width() - 100, posY),
+      k.rect(112, 32, { radius: 4 }),
+      k.area({ cursor: "pointer" }),
+      k.anchor("center"),
+      "button",
+    ]);
+  }
+
+  function addButtonText(button: GameObj, text: string): GameObj {
+    return button.add([
+      k.text(text, { size: 16 }),
+      k.color(0, 0, 0),
+      k.anchor("center"),
+      "text",
+    ]);
+  }
+
+  function addText(posX: number, posY: number, text: string): GameObj {
+    return k.add([k.pos(posX, posY), k.text(text, { size: 16 }), "text"]);
+  }
+
   // add buttons
-  const hit = k.add([
-    k.pos(k.width() - 100, k.height() - SPRITE_SIZE * 2),
-    k.rect(100, 32, { radius: 4 }),
-    k.area({ cursor: "pointer" }),
-    k.anchor("center"),
-    "button",
-  ]);
+  const hit = makeButton(k.height() / 2 + SPRITE_SIZE);
+  const stand = makeButton(k.height() / 2 + SPRITE_SIZE * 2);
+  const nextRound = makeButton(k.height() / 2 - SPRITE_SIZE * 2);
+  const bet = makeButton(k.height() / 2 - SPRITE_SIZE);
+  const start = makeButton(k.height() / 2);
 
-  const stand = k.add([
-    k.pos(k.width() - 100, k.height() - SPRITE_SIZE),
-    k.rect(100, 32, { radius: 4 }),
-    k.area({ cursor: "pointer" }),
-    k.anchor("center"),
-    "button",
-  ]);
-
-  const nextRound = k.add([
-    k.pos(k.width() - 100, SPRITE_SIZE),
-    k.rect(100, 32, { radius: 4 }),
-    k.area({ cursor: "pointer" }),
-    k.anchor("center"),
-    "button",
-  ]);
+  // add text to buttons
+  addButtonText(hit, "Hit");
+  addButtonText(stand, "Stand");
+  addButtonText(nextRound, "Next");
+  addButtonText(bet, "Bet $100");
+  addButtonText(start, "Start");
 
   // reset cursor on hover end
   k.onHoverEnd("button", () => k.setCursor("default"));
-
-  // add text to buttons
-  hit.add([
-    k.text("Hit", { size: 24 }),
-    k.color(0, 0, 0),
-    k.anchor("center"),
-    "text",
-  ]);
-
-  stand.add([
-    k.text("Stand", { size: 24 }),
-    k.color(0, 0, 0),
-    k.anchor("center"),
-    "text",
-  ]);
-
-  nextRound.add([
-    k.text("Next", { size: 24 }),
-    k.color(0, 0, 0),
-    k.anchor("center"),
-    "text",
-  ]);
 
   // add hit function
   hit.onClick(() => {
@@ -110,36 +114,22 @@ k.scene("game", () => {
   // add card deck sprite
   k.add([
     k.sprite("cards", { frame: CARD_BACK_FRAME }),
-    k.pos(SPRITE_SIZE, k.height() / 2),
-    k.anchor("center"),
+    k.pos(SPRITE_SIZE / 2, SPRITE_SIZE * 2),
   ]);
 
-  // display score
-  const score = k.add([
-    k.pos(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE),
-    k.text("Score: 0", { size: 16 }),
-    "text",
-  ]);
-
-  // display dealer score
-  const dealerScore = k.add([
-    k.pos(SPRITE_SIZE / 2, SPRITE_SIZE / 2),
-    k.text("Dealer: 0", { size: 16 }),
-    "text",
-  ]);
+  // display scores
+  const score = addText(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE, "Score: 0");
+  const dealerScore = addText(SPRITE_SIZE / 2, SPRITE_SIZE / 2, "Dealer: 0");
 
   // add messages to display win/lose state
-  const message = k.add([
-    k.pos(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE * 1.5),
-    k.text("", { size: 16 }),
-    "text",
-  ]);
+  const message = addText(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE * 1.5, "");
+  const dealerMessage = addText(SPRITE_SIZE / 2, SPRITE_SIZE, "");
 
-  const dealerMessage = k.add([
-    k.pos(SPRITE_SIZE / 2, SPRITE_SIZE),
-    k.text("", { size: 16 }),
-    "text",
-  ]);
+  // display current money
+  const money = addText(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE * 2, "$1000");
+
+  // display bet amount
+  const betAmount = addText(SPRITE_SIZE * 1.5, SPRITE_SIZE * 2.5, "");
 
   // initialise deck and hand variables
   let deck: Array<Card>;
@@ -178,28 +168,16 @@ k.scene("game", () => {
     // show initial dealer cards
     startDealerHand(dealerHand);
 
-    // enable gameplay buttons
+    // show and enable gameplay buttons
+    hit.hidden = false;
     hit.paused = false;
+    stand.hidden = false;
     stand.paused = false;
 
     // show hand and check result
     if (showHand(hand) === 21) {
       finishRound(Result.Blackjack);
     }
-  }
-
-  function makeCard(
-    frame: number,
-    posX: number,
-    posY: number,
-    tag: string
-  ): GameObj {
-    return k.add([
-      k.sprite("cards", { frame: frame }),
-      k.pos(posX, posY),
-      k.anchor("center"),
-      tag,
-    ]);
   }
 
   function startDealerHand(hand: Array<Card>): void {
@@ -277,7 +255,9 @@ k.scene("game", () => {
   }
 
   function finishRound(result: Result): void {
+    hit.hidden = true;
     hit.paused = true;
+    stand.hidden = true;
     stand.paused = true;
     k.setCursor("default");
 
