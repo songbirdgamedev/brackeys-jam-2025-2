@@ -94,8 +94,9 @@ k.scene("game", () => {
   // add hit function
   hit.onClick(() => {
     hand.push(dealCard(deck));
-    const result: Result = showHand(hand);
-    if (result !== Result.Hold) finishRound(result);
+    const score: number = showHand(hand);
+    if (score === 21) finishRound(Result.Win);
+    else if (score > 21) finishRound(Result.Bust);
   });
 
   // add stand function
@@ -182,8 +183,7 @@ k.scene("game", () => {
     stand.paused = false;
 
     // show hand and check result
-    const result: Result = showHand(hand);
-    if (result === Result.Win) {
+    if (showHand(hand) === 21) {
       finishRound(Result.Blackjack);
     }
   }
@@ -208,7 +208,7 @@ k.scene("game", () => {
     dealerScore.text = `Dealer: ${hand[0].points === 1 ? 11 : hand[0].points}`;
   }
 
-  function showDealerHand(hand: Array<Card>): Result {
+  function showDealerHand(hand: Array<Card>): number {
     const [holeCard] = k.get("holeCard");
 
     if (holeCard) {
@@ -231,7 +231,7 @@ k.scene("game", () => {
     return checkHand(hand, "Dealer");
   }
 
-  function showHand(hand: Array<Card>): Result {
+  function showHand(hand: Array<Card>): number {
     const cards = k.get("card");
 
     for (let i = cards.length; i < hand.length; i++) {
@@ -246,28 +246,19 @@ k.scene("game", () => {
     return checkHand(hand, "Score");
   }
 
-  function checkHand(hand: Array<Card>, label: string): Result {
-    const [minScore, maxScore] = calculatePoints(hand);
-    showPoints(label, minScore, maxScore);
-
-    if (minScore > 21) return Result.Bust;
-    if (minScore === 21 || maxScore === 21) return Result.Win;
-    return Result.Hold;
+  function checkHand(hand: Array<Card>, label: string): number {
+    const scoreToDisplay = calculatePoints(hand);
+    showPoints(label, scoreToDisplay);
+    return scoreToDisplay;
   }
 
-  function showPoints(label: string, minScore: number, maxScore: number): void {
-    let scoreToDisplay = maxScore;
-
-    while (scoreToDisplay !== minScore && scoreToDisplay > 21) {
-      scoreToDisplay -= 10;
-    }
-
-    if (label === "Score") score.text = `${label}: ${scoreToDisplay}`;
-    else if (label === "Dealer")
-      dealerScore.text = `${label}: ${scoreToDisplay}`;
+  function showPoints(label: string, scoreToDisplay: number): void {
+    const text = `${label}: ${scoreToDisplay}`;
+    if (label === "Score") score.text = text;
+    else if (label === "Dealer") dealerScore.text = text;
   }
 
-  function calculatePoints(hand: Array<Card>): [number, number] {
+  function calculatePoints(hand: Array<Card>): number {
     // aces can be worth either 1 or 11 so we need to keep track of them
     let aceCount: number = 0;
 
@@ -276,8 +267,13 @@ k.scene("game", () => {
       return total + card.points;
     }, 0);
 
-    // returns minimum and maximum score
-    return [score, score + aceCount * 10];
+    let scoreToDisplay: number = score + aceCount * 10;
+
+    while (scoreToDisplay !== score && scoreToDisplay > 21) {
+      scoreToDisplay -= 10;
+    }
+
+    return scoreToDisplay;
   }
 
   function finishRound(result: Result): void {
@@ -285,11 +281,17 @@ k.scene("game", () => {
     stand.paused = true;
     k.setCursor("default");
 
-    const dealerResult: Result = showDealerHand(dealerHand);
+    const dealerScore: number = showDealerHand(dealerHand);
+
+    if (result === Result.Bust) {
+      message.text = "Bust :(";
+      // lose bet
+      return enableNextButton();
+    }
 
     if (result === Result.Blackjack) {
       message.text = "Blackjack!";
-      if (dealerResult === Result.Win) {
+      if (dealerScore === 21) {
         dealerMessage.text = "Tie.";
         // return bet
       } else {
@@ -298,16 +300,33 @@ k.scene("game", () => {
       return enableNextButton();
     }
 
-    if (result === Result.Bust) {
-      message.text = "Bust :(";
-      // lose bet
+    if (result === Result.Win) {
+      message.text = "21!";
+    }
+
+    drawDealerCards(dealerScore);
+  }
+
+  function drawDealerCards(dealerScore: number): void {
+    if (dealerScore > 16) {
+      showResult(dealerScore);
       return enableNextButton();
     }
 
-    if (result === Result.Win) {
-      message.text = "21!";
-      // check dealer cards
-      return enableNextButton();
+    k.wait(1, () => {
+      dealerHand.push(dealCard(deck));
+      drawDealerCards(showDealerHand(dealerHand));
+    });
+  }
+
+  function showResult(dealerScore: number): void {
+    const score: number = calculatePoints(hand);
+    if (dealerScore > 21 || dealerScore < score) {
+      dealerMessage.text = "You win!";
+    } else if (dealerScore === score) {
+      dealerMessage.text = "Tie.";
+    } else {
+      dealerMessage.text = "You lose.";
     }
   }
 
