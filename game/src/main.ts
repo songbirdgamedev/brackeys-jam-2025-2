@@ -1,5 +1,5 @@
 import { crew } from "@kaplayjs/crew";
-import kaplay, { GameObj } from "kaplay";
+import kaplay, { GameObj, AreaComp, TextComp } from "kaplay";
 import type { Card } from "./cards";
 import { generateDeck, shuffleDeck, dealCard } from "./cards";
 
@@ -55,7 +55,7 @@ k.scene("game", () => {
     ]);
   }
 
-  function makeButton(posY: number): GameObj {
+  function makeButton(posY: number): GameObj<AreaComp> {
     return k.add([
       k.pos(k.width() - 100, posY),
       k.rect(112, 32, { radius: 4 }),
@@ -65,7 +65,7 @@ k.scene("game", () => {
     ]);
   }
 
-  function addButtonText(button: GameObj, text: string): GameObj {
+  function addButtonText(button: GameObj, text: string): GameObj<TextComp> {
     return button.add([
       k.text(text, { size: 16 }),
       k.color(0, 0, 0),
@@ -74,7 +74,11 @@ k.scene("game", () => {
     ]);
   }
 
-  function addText(posX: number, posY: number, text: string): GameObj {
+  function addText(
+    posX: number,
+    posY: number,
+    text: string
+  ): GameObj<TextComp> {
     return k.add([k.pos(posX, posY), k.text(text, { size: 16 }), "text"]);
   }
 
@@ -92,21 +96,21 @@ k.scene("game", () => {
   const hit = makeButton(k.height() / 2 + SPRITE_SIZE);
   const stand = makeButton(k.height() / 2 + SPRITE_SIZE * 2);
   const nextRound = makeButton(k.height() / 2 - SPRITE_SIZE * 2);
-  const bet = makeButton(k.height() / 2 - SPRITE_SIZE);
+  const makeBet = makeButton(k.height() / 2 - SPRITE_SIZE);
   const start = makeButton(k.height() / 2);
 
   // add text to buttons
   addButtonText(hit, "Hit");
   addButtonText(stand, "Stand");
   addButtonText(nextRound, "Next");
-  addButtonText(bet, "Bet $100");
+  addButtonText(makeBet, "Bet $100");
   addButtonText(start, "Start");
 
   // reset cursor on hover end
-  k.onHoverEnd("button", () => k.setCursor("default"));
+  k.onHoverEnd("button", (): void => k.setCursor("default"));
 
   // add hit function
-  hit.onClick(() => {
+  hit.onClick((): void => {
     hand.push(dealCard(deck));
     const score: number = showHand(hand);
     if (score === 21) finishRound(Result.Win);
@@ -114,12 +118,25 @@ k.scene("game", () => {
   });
 
   // add stand function
-  stand.onClick(() => {
+  stand.onClick((): void => {
     finishRound(Result.Hold);
   });
 
   // add next round function
   nextRound.onClick(resetRound);
+
+  // add bet function
+  makeBet.onClick((): void => {
+    currentMoney -= 100;
+    currentBet += 100;
+
+    updateMoney();
+
+    if (currentMoney === 0) {
+      disableButton(makeBet);
+      k.setCursor("default");
+    }
+  });
 
   // add start function
   start.onClick(startRound);
@@ -142,19 +159,24 @@ k.scene("game", () => {
   const money = addText(SPRITE_SIZE / 2, k.height() - SPRITE_SIZE * 2, "$1000");
 
   // display bet amount
-  const betAmount = addText(SPRITE_SIZE * 1.5, SPRITE_SIZE * 2.5, "");
+  const bet = addText(SPRITE_SIZE * 1.5, SPRITE_SIZE * 2.5, "");
 
-  // initialise deck and hand variables
+  // initialise variables
   let deck: Array<Card>;
   let hand: Array<Card>;
   let dealerHand: Array<Card>;
+  let currentMoney: number = 1000;
+  let currentBet: number = 0;
 
   // start game
   resetRound();
 
   function resetRound(): void {
+    // lose if no money
+    if (currentMoney === 0) k.go("lose");
+
     // show and enable bet and start buttons
-    enableButton(bet);
+    enableButton(makeBet);
     enableButton(start);
 
     // hide and disable unused buttons
@@ -163,9 +185,11 @@ k.scene("game", () => {
     disableButton(stand);
     k.setCursor("default");
 
-    // hide any messages
+    // reset any messages
     message.text = "";
     dealerMessage.text = "";
+    score.text = "Score: 0";
+    dealerScore.text = "Dealer: 0";
 
     // reset hands
     hand = [];
@@ -176,7 +200,7 @@ k.scene("game", () => {
 
   function startRound(): void {
     // hide and disable unused buttons
-    disableButton(bet);
+    disableButton(makeBet);
     disableButton(start);
     k.setCursor("default");
 
@@ -287,7 +311,7 @@ k.scene("game", () => {
 
     if (result === Result.Bust) {
       message.text = "Bust :(";
-      // lose bet
+      resolveBet(0);
       return enableButton(nextRound);
     }
 
@@ -295,9 +319,9 @@ k.scene("game", () => {
       message.text = "Blackjack!";
       if (dealerScore === 21) {
         dealerMessage.text = "Tie.";
-        // return bet
+        resolveBet(1);
       } else {
-        // payout big
+        resolveBet(3);
       }
       return enableButton(nextRound);
     }
@@ -325,12 +349,38 @@ k.scene("game", () => {
     const score: number = calculatePoints(hand);
     if (dealerScore > 21 || dealerScore < score) {
       dealerMessage.text = "You win!";
+      resolveBet(2);
     } else if (dealerScore === score) {
       dealerMessage.text = "Tie.";
+      resolveBet(1);
     } else {
       dealerMessage.text = "You lose.";
+      resolveBet(0);
     }
   }
+
+  function updateMoney(): void {
+    money.text = `$${currentMoney}`;
+    bet.text = currentBet === 0 ? "" : `$${currentBet}`;
+  }
+
+  function resolveBet(multiplier: number): void {
+    currentMoney += currentBet * multiplier;
+    currentBet = 0;
+    updateMoney();
+  }
+});
+
+k.scene("lose", () => {
+  k.add([
+    k.pos(k.width() / 2, k.height() / 2),
+    k.text("You're all out of money.\n\nClick anywhere to play again!", {
+      size: 16,
+    }),
+    k.anchor("center"),
+  ]);
+
+  k.onClick((): void => k.go("game"));
 });
 
 k.go("game");
