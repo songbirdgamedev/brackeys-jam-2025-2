@@ -40,6 +40,9 @@ k.loadSprite("cards", "sprites/cards.png", {
   sliceY: 4,
 });
 
+// load music
+k.loadMusic("music", "music/feels-good-david-renda.mp3");
+
 // load sounds
 k.loadSound("open", "sounds/cards-pack-open-2.ogg");
 k.loadSound("deal", "sounds/card-place-1.ogg");
@@ -48,6 +51,13 @@ k.loadSound("flip", "sounds/card-slide-3.ogg");
 k.loadSound("chip", "sounds/chip-lay-1.ogg");
 
 k.scene("game", () => {
+  // play music
+  k.setVolume(0.6);
+  const music = k.play("music");
+  music.loop = true;
+  music.volume = 0.2;
+  music.seek(4.0);
+
   function makeCard(
     frame: number,
     posX: number,
