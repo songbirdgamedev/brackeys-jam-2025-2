@@ -20,7 +20,7 @@ const k = kaplay({
   scale: 2,
   stretch: false,
   letterbox: false,
-  debug: true,
+  debug: false,
   font: "happy",
   crisp: false,
   background: "000000",
@@ -39,6 +39,13 @@ k.loadSprite("cards", "sprites/cards.png", {
   sliceX: 14,
   sliceY: 4,
 });
+
+// load sounds
+k.loadSound("open", "sounds/cards-pack-open-2.ogg");
+k.loadSound("deal", "sounds/card-place-1.ogg");
+k.loadSound("card", "sounds/card-shove-3.ogg");
+k.loadSound("flip", "sounds/card-slide-3.ogg");
+k.loadSound("chip", "sounds/chip-lay-1.ogg");
 
 k.scene("game", () => {
   function makeCard(
@@ -111,6 +118,7 @@ k.scene("game", () => {
 
   // add hit function
   hit.onClick((): void => {
+    k.play("card");
     hand.push(dealCard(deck));
     const score: number = showHand(hand);
     if (score === 21) finishRound(Result.Win);
@@ -127,6 +135,7 @@ k.scene("game", () => {
 
   // add bet function
   makeBet.onClick((): void => {
+    k.play("chip");
     currentMoney -= 100;
     currentBet += 100;
 
@@ -175,6 +184,9 @@ k.scene("game", () => {
     // lose if no money
     if (currentMoney === 0) k.go("lose");
 
+    // play sound
+    k.play("open");
+
     // show and enable bet and start buttons
     enableButton(makeBet);
     enableButton(start);
@@ -199,6 +211,9 @@ k.scene("game", () => {
   }
 
   function startRound(): void {
+    // play sound
+    k.play("deal");
+
     // hide and disable unused buttons
     disableButton(makeBet);
     disableButton(start);
@@ -303,6 +318,10 @@ k.scene("game", () => {
   }
 
   function finishRound(result: Result): void {
+    //play sound
+    k.play("flip");
+
+    // disable buttons
     disableButton(hit);
     disableButton(stand);
     k.setCursor("default");
@@ -340,6 +359,7 @@ k.scene("game", () => {
     }
 
     k.wait(1, () => {
+      k.play("flip");
       dealerHand.push(dealCard(deck));
       drawDealerCards(showDealerHand(dealerHand));
     });
