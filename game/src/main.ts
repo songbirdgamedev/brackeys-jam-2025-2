@@ -192,7 +192,10 @@ k.scene("game", () => {
 
   function resetRound(): void {
     // lose if no money
-    if (currentMoney === 0) k.go("lose");
+    if (currentMoney === 0) {
+      music.stop();
+      k.go("lose");
+    }
 
     // play sound
     k.play("open");
